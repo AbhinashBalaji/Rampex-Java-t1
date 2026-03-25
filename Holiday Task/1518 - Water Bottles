@@ -1,0 +1,18 @@
+class Solution {
+    public int numWaterBottles(int numBottles, int numExchange) {
+        int rem,newBottles;
+        int sum=numBottles;
+        while(numBottles>=numExchange){
+            newBottles = numBottles / numExchange;
+            rem=numBottles%numExchange;
+            
+            sum+=newBottles;
+
+            numBottles=newBottles+rem;
+
+
+        }
+       
+        return sum;
+    }
+}
