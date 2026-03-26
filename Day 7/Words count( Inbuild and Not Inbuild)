@@ -1,0 +1,42 @@
+//With Inbuild
+import java.util.*;
+
+class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        String str = sc.nextLine().trim();
+
+        if(str.isEmpty()){
+            System.out.print(0);
+            return;
+        }
+
+        String[] words = str.split("\\s+");
+        System.out.print(words.length);
+    }
+}
+
+//Without Inbuild
+import java.util.*;
+
+class Main {
+    public static void main(String[] args) {
+        Scanner sc=new Scanner(System.in);
+        String str=sc.nextLine();
+        int count=0;
+        boolean flag=true;
+       
+        for(int i=1;i<str.length();i++){
+            char ch=str.charAt(i);
+            if(ch!=' '){
+                if(flag){
+                    count++;
+                    flag=false;
+                }
+            }
+            else flag=true;
+        }
+        
+        System.out.print(count);
+    }
+}
