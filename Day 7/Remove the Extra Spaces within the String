@@ -1,0 +1,34 @@
+import java.util.*;
+
+public class Main
+{
+	public static void main(String[] args) {
+		Scanner sc=new Scanner(System.in);
+		String str=sc.nextLine();
+		String res="";
+		
+		// With Inbuild Function
+		
+		String[] arr=str.split("\\s+");
+		for(int i=0;i<arr.length;i++){
+		    System.out.print(arr[i]+" ");
+		}
+		
+		// Without Inbuild Function
+		boolean flag=true;
+		for(int i=0;i<str.length();i++){
+		    if(str.charAt(i)!=' '){
+		    res=res+str.charAt(i);
+		    flag=true;
+		    }
+		    else if(flag){
+		        res+=" ";
+		        flag=false;
+		    }
+		    else i++;
+		    
+		}
+		System.out.print(res);
+		
+	}
+}
