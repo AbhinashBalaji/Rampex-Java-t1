@@ -1,0 +1,363 @@
+import java.util.*;
+
+// ---------------- POSITION ----------------
+class Position {
+    private int row;
+    private int col;
+
+    public Position(int row, int col) {
+        this.row = row;
+        this.col = col;
+    }
+
+    public int getRow() {
+        return row;
+    }
+
+    public int getCol() {
+        return col;
+    }
+
+    public boolean isValid() {
+        return row >= 0 && row < 8 && col >= 0 && col < 8;
+    }
+}
+
+// ---------------- ABSTRACT PIECE ----------------
+abstract class Piece {
+    private String color;
+    private char symbol;
+    private Position position;
+
+    public Piece(String color, char symbol, Position position) {
+        this.color = color;
+        this.symbol = symbol;
+        this.position = position;
+    }
+
+    public String getColor() {
+        return color;
+    }
+
+    public char getSymbol() {
+        return symbol;
+    }
+
+    public Position getPosition() {
+        return position;
+    }
+
+    public void setPosition(Position position) {
+        this.position = position;
+    }
+
+    public abstract boolean isValidMove(Position newPos, Board board);
+}
+
+// ---------------- PAWN ----------------
+class Pawn extends Piece {
+    public Pawn(String color, Position position) {
+        super(color, color.equals("White") ? 'P' : 'p', position);
+    }
+
+    @Override
+    public boolean isValidMove(Position newPos, Board board) {
+        Position curr = getPosition();
+        int dir = getColor().equals("White") ? -1 : 1;
+
+        int rowDiff = newPos.getRow() - curr.getRow();
+        int colDiff = Math.abs(newPos.getCol() - curr.getCol());
+
+        Piece target = board.getPiece(newPos);
+
+        // forward move
+        if (colDiff == 0 && target == null && rowDiff == dir) {
+            return true;
+        }
+
+        // diagonal capture
+        if (colDiff == 1 && rowDiff == dir && target != null &&
+            !target.getColor().equals(getColor())) {
+            return true;
+        }
+
+        return false;
+    }
+}
+
+// ---------------- ROOK ----------------
+class Rook extends Piece {
+    public Rook(String color, Position position) {
+        super(color, color.equals("White") ? 'R' : 'r', position);
+    }
+
+    @Override
+    public boolean isValidMove(Position newPos, Board board) {
+        Position curr = getPosition();
+
+        if (curr.getRow() != newPos.getRow() && curr.getCol() != newPos.getCol()) {
+            return false;
+        }
+
+        return board.isPathClear(curr, newPos) && board.isTargetValid(newPos, getColor());
+    }
+}
+
+// ---------------- BISHOP ----------------
+class Bishop extends Piece {
+    public Bishop(String color, Position position) {
+        super(color, color.equals("White") ? 'B' : 'b', position);
+    }
+
+    @Override
+    public boolean isValidMove(Position newPos, Board board) {
+        Position curr = getPosition();
+
+        if (Math.abs(curr.getRow() - newPos.getRow()) != Math.abs(curr.getCol() - newPos.getCol())) {
+            return false;
+        }
+
+        return board.isPathClear(curr, newPos) && board.isTargetValid(newPos, getColor());
+    }
+}
+
+// ---------------- KNIGHT ----------------
+class Knight extends Piece {
+    public Knight(String color, Position position) {
+        super(color, color.equals("White") ? 'N' : 'n', position);
+    }
+
+    @Override
+    public boolean isValidMove(Position newPos, Board board) {
+        Position curr = getPosition();
+
+        int rowDiff = Math.abs(curr.getRow() - newPos.getRow());
+        int colDiff = Math.abs(curr.getCol() - newPos.getCol());
+
+        boolean validShape = (rowDiff == 2 && colDiff == 1) || (rowDiff == 1 && colDiff == 2);
+
+        return validShape && board.isTargetValid(newPos, getColor());
+    }
+}
+
+// ---------------- QUEEN ----------------
+class Queen extends Piece {
+    public Queen(String color, Position position) {
+        super(color, color.equals("White") ? 'Q' : 'q', position);
+    }
+
+    @Override
+    public boolean isValidMove(Position newPos, Board board) {
+        Position curr = getPosition();
+
+        boolean straight = curr.getRow() == newPos.getRow() || curr.getCol() == newPos.getCol();
+        boolean diagonal = Math.abs(curr.getRow() - newPos.getRow()) ==
+                           Math.abs(curr.getCol() - newPos.getCol());
+
+        if (!straight && !diagonal) {
+            return false;
+        }
+
+        return board.isPathClear(curr, newPos) && board.isTargetValid(newPos, getColor());
+    }
+}
+
+// ---------------- KING ----------------
+class King extends Piece {
+    public King(String color, Position position) {
+        super(color, color.equals("White") ? 'K' : 'k', position);
+    }
+
+    @Override
+    public boolean isValidMove(Position newPos, Board board) {
+        Position curr = getPosition();
+
+        int rowDiff = Math.abs(curr.getRow() - newPos.getRow());
+        int colDiff = Math.abs(curr.getCol() - newPos.getCol());
+
+        return rowDiff <= 1 && colDiff <= 1 && board.isTargetValid(newPos, getColor());
+    }
+}
+
+// ---------------- BOARD ----------------
+class Board {
+    private Piece[][] grid;
+
+    public Board() {
+        grid = new Piece[8][8];
+        setupBoard();
+    }
+
+    public Piece getPiece(Position pos) {
+        if (!pos.isValid()) return null;
+        return grid[pos.getRow()][pos.getCol()];
+    }
+
+    public void setPiece(Position pos, Piece piece) {
+        grid[pos.getRow()][pos.getCol()] = piece;
+    }
+
+    public boolean isTargetValid(Position pos, String color) {
+        Piece target = getPiece(pos);
+        return target == null || !target.getColor().equals(color);
+    }
+
+    public boolean isPathClear(Position start, Position end) {
+        int rowStep = Integer.compare(end.getRow(), start.getRow());
+        int colStep = Integer.compare(end.getCol(), start.getCol());
+
+        int r = start.getRow() + rowStep;
+        int c = start.getCol() + colStep;
+
+        while (r != end.getRow() || c != end.getCol()) {
+            if (grid[r][c] != null) {
+                return false;
+            }
+            r += rowStep;
+            c += colStep;
+        }
+        return true;
+    }
+
+    public boolean movePiece(Position from, Position to) {
+        if (!from.isValid() || !to.isValid()) {
+            System.out.println("Invalid board position.");
+            return false;
+        }
+
+        Piece piece = getPiece(from);
+
+        if (piece == null) {
+            System.out.println("No piece at source.");
+            return false;
+        }
+
+        if (!piece.isValidMove(to, this)) {
+            System.out.println("Invalid move for " + piece.getClass().getSimpleName());
+            return false;
+        }
+
+        Piece target = getPiece(to);
+        if (target != null) {
+            System.out.println(piece.getColor() + " " + piece.getClass().getSimpleName()
+                    + " captured " + target.getColor() + " " + target.getClass().getSimpleName());
+        }
+
+        setPiece(to, piece);
+        setPiece(from, null);
+        piece.setPosition(to);
+
+        return true;
+    }
+
+    public void setupBoard() {
+        // Black pieces
+        grid[0][0] = new Rook("Black", new Position(0, 0));
+        grid[0][1] = new Knight("Black", new Position(0, 1));
+        grid[0][2] = new Bishop("Black", new Position(0, 2));
+        grid[0][3] = new Queen("Black", new Position(0, 3));
+        grid[0][4] = new King("Black", new Position(0, 4));
+        grid[0][5] = new Bishop("Black", new Position(0, 5));
+        grid[0][6] = new Knight("Black", new Position(0, 6));
+        grid[0][7] = new Rook("Black", new Position(0, 7));
+
+        for (int i = 0; i < 8; i++) {
+            grid[1][i] = new Pawn("Black", new Position(1, i));
+        }
+
+        // White pieces
+        grid[7][0] = new Rook("White", new Position(7, 0));
+        grid[7][1] = new Knight("White", new Position(7, 1));
+        grid[7][2] = new Bishop("White", new Position(7, 2));
+        grid[7][3] = new Queen("White", new Position(7, 3));
+        grid[7][4] = new King("White", new Position(7, 4));
+        grid[7][5] = new Bishop("White", new Position(7, 5));
+        grid[7][6] = new Knight("White", new Position(7, 6));
+        grid[7][7] = new Rook("White", new Position(7, 7));
+
+        for (int i = 0; i < 8; i++) {
+            grid[6][i] = new Pawn("White", new Position(6, i));
+        }
+    }
+
+    public void printBoard() {
+        System.out.println();
+        System.out.println("    0 1 2 3 4 5 6 7");
+        System.out.println("   -----------------");
+        for (int i = 0; i < 8; i++) {
+            System.out.print(i + " | ");
+            for (int j = 0; j < 8; j++) {
+                if (grid[i][j] == null) {
+                    System.out.print(". ");
+                } else {
+                    System.out.print(grid[i][j].getSymbol() + " ");
+                }
+            }
+            System.out.println();
+        }
+        System.out.println();
+    }
+}
+
+// ---------------- GAME ----------------
+class Game {
+    private Board board;
+    private String currentTurn;
+
+    public Game() {
+        board = new Board();
+        currentTurn = "White";
+    }
+
+    public void start() {
+        Scanner sc = new Scanner(System.in);
+
+        while (true) {
+            board.printBoard();
+            System.out.println(currentTurn + "'s turn");
+            System.out.println("Enter move: fromRow fromCol toRow toCol");
+            System.out.println("Type -1 to exit");
+
+            int fromRow = sc.nextInt();
+            if (fromRow == -1) {
+                System.out.println("Game ended.");
+                break;
+            }
+
+            int fromCol = sc.nextInt();
+            int toRow = sc.nextInt();
+            int toCol = sc.nextInt();
+
+            Position from = new Position(fromRow, fromCol);
+            Position to = new Position(toRow, toCol);
+
+            Piece piece = board.getPiece(from);
+
+            if (piece == null) {
+                System.out.println("No piece selected.");
+                continue;
+            }
+
+            if (!piece.getColor().equals(currentTurn)) {
+                System.out.println("You can move only your own piece.");
+                continue;
+            }
+
+            boolean moved = board.movePiece(from, to);
+
+            if (moved) {
+                currentTurn = currentTurn.equals("White") ? "Black" : "White";
+            }
+        }
+
+        sc.close();
+    }
+}
+
+// ---------------- MAIN ----------------
+public class Main {
+    public static void main(String[] args) {
+        Game game = new Game();
+        game.start();
+    }
+}
