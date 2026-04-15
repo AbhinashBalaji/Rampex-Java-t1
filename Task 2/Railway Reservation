@@ -1,0 +1,420 @@
+import java.util.*;
+
+// -------------------- PERSON --------------------
+class Person {
+    protected String name;
+    protected int age;
+
+    public Person(String name, int age) {
+        this.name = name;
+        this.age = age;
+    }
+}
+
+// -------------------- PASSENGER --------------------
+class Passenger extends Person {
+    private int passengerId;
+    private String gender;
+
+    public Passenger(int passengerId, String name, int age, String gender) {
+        super(name, age);
+        this.passengerId = passengerId;
+        this.gender = gender;
+    }
+
+    public int getPassengerId() {
+        return passengerId;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public int getAge() {
+        return age;
+    }
+
+    public String getGender() {
+        return gender;
+    }
+}
+
+// -------------------- TRAIN --------------------
+class Train {
+    private int trainId;
+    private String trainName;
+    private String source;
+    private String destination;
+    private int totalSeats;
+    private int availableSeats;
+    private double fare;
+
+    public Train(int trainId, String trainName, String source, String destination, int totalSeats, double fare) {
+        this.trainId = trainId;
+        this.trainName = trainName;
+        this.source = source;
+        this.destination = destination;
+        this.totalSeats = totalSeats;
+        this.availableSeats = totalSeats;
+        this.fare = fare;
+    }
+
+    public int getTrainId() {
+        return trainId;
+    }
+
+    public String getTrainName() {
+        return trainName;
+    }
+
+    public String getSource() {
+        return source;
+    }
+
+    public String getDestination() {
+        return destination;
+    }
+
+    public int getTotalSeats() {
+        return totalSeats;
+    }
+
+    public int getAvailableSeats() {
+        return availableSeats;
+    }
+
+    public double getFare() {
+        return fare;
+    }
+
+    public boolean bookSeat() {
+        if (availableSeats > 0) {
+            availableSeats--;
+            return true;
+        }
+        return false;
+    }
+
+    public void cancelSeat() {
+        if (availableSeats < totalSeats) {
+            availableSeats++;
+        }
+    }
+
+    public void displayTrain() {
+        System.out.println("--------------------------------------------------");
+        System.out.println("Train ID        : " + trainId);
+        System.out.println("Train Name      : " + trainName);
+        System.out.println("Source          : " + source);
+        System.out.println("Destination     : " + destination);
+        System.out.println("Available Seats : " + availableSeats + "/" + totalSeats);
+        System.out.println("Fare            : Rs." + fare);
+    }
+}
+
+// -------------------- PAYMENT INTERFACE --------------------
+interface Payment {
+    void pay(double amount);
+}
+
+class UPIPayment implements Payment {
+    @Override
+    public void pay(double amount) {
+        System.out.println("Payment of Rs." + amount + " completed using UPI.");
+    }
+}
+
+class CardPayment implements Payment {
+    @Override
+    public void pay(double amount) {
+        System.out.println("Payment of Rs." + amount + " completed using Card.");
+    }
+}
+
+// -------------------- ABSTRACT BOOKING --------------------
+abstract class BookingOperation {
+    abstract void viewTrains();
+    abstract void bookTicket();
+    abstract void cancelTicket();
+    abstract void viewAllTickets();
+}
+
+// -------------------- TICKET --------------------
+class Ticket {
+    private static int nextTicketId = 1001;
+
+    private int ticketId;
+    private Passenger passenger;
+    private Train train;
+    private String coachType;
+    private String status;
+
+    public Ticket(Passenger passenger, Train train, String coachType) {
+        this.ticketId = nextTicketId++;
+        this.passenger = passenger;
+        this.train = train;
+        this.coachType = coachType;
+        this.status = "BOOKED";
+    }
+
+    public int getTicketId() {
+        return ticketId;
+    }
+
+    public Passenger getPassenger() {
+        return passenger;
+    }
+
+    public Train getTrain() {
+        return train;
+    }
+
+    public String getCoachType() {
+        return coachType;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void cancel() {
+        status = "CANCELLED";
+    }
+
+    public void displayTicket() {
+        System.out.println("\n================= TICKET DETAILS =================");
+        System.out.println("Ticket ID       : " + ticketId);
+        System.out.println("Passenger ID    : " + passenger.getPassengerId());
+        System.out.println("Passenger Name  : " + passenger.getName());
+        System.out.println("Age             : " + passenger.getAge());
+        System.out.println("Gender          : " + passenger.getGender());
+        System.out.println("Train ID        : " + train.getTrainId());
+        System.out.println("Train Name      : " + train.getTrainName());
+        System.out.println("Route           : " + train.getSource() + " -> " + train.getDestination());
+        System.out.println("Coach Type      : " + coachType);
+        System.out.println("Fare            : Rs." + train.getFare());
+        System.out.println("Status          : " + status);
+        System.out.println("==================================================\n");
+    }
+}
+
+// -------------------- RESERVATION SYSTEM --------------------
+class ReservationSystem extends BookingOperation {
+    private ArrayList<Train> trains = new ArrayList<>();
+    private ArrayList<Ticket> tickets = new ArrayList<>();
+    private Scanner sc = new Scanner(System.in);
+
+    public ReservationSystem() {
+        addDefaultTrains();
+    }
+
+    private void addDefaultTrains() {
+        trains.add(new Train(101, "Chennai Express", "Chennai", "Coimbatore", 5, 250));
+        trains.add(new Train(102, "Madurai Superfast", "Chennai", "Madurai", 4, 320));
+        trains.add(new Train(103, "Nellai Express", "Chennai", "Tirunelveli", 3, 400));
+        trains.add(new Train(104, "Kovai Intercity", "Salem", "Coimbatore", 2, 180));
+    }
+
+    @Override
+    public void viewTrains() {
+        System.out.println("\n============== AVAILABLE TRAINS ==============");
+        for (Train t : trains) {
+            t.displayTrain();
+        }
+        System.out.println("--------------------------------------------------");
+    }
+
+    private Train findTrainById(int id) {
+        for (Train t : trains) {
+            if (t.getTrainId() == id) {
+                return t;
+            }
+        }
+        return null;
+    }
+
+    private Ticket findTicketById(int id) {
+        for (Ticket t : tickets) {
+            if (t.getTicketId() == id) {
+                return t;
+            }
+        }
+        return null;
+    }
+
+    // Overloaded method
+    public void bookTicket(int trainId, Passenger passenger, String coachType) {
+        Train train = findTrainById(trainId);
+
+        if (train == null) {
+            System.out.println("Invalid Train ID.");
+            return;
+        }
+
+        if (!train.bookSeat()) {
+            System.out.println("Sorry, no seats available.");
+            return;
+        }
+
+        Payment payment;
+        System.out.println("Choose Payment Method:");
+        System.out.println("1. UPI");
+        System.out.println("2. Card");
+        System.out.print("Enter choice: ");
+        int payChoice = readInt();
+
+        if (payChoice == 1) {
+            payment = new UPIPayment();
+        } else {
+            payment = new CardPayment();
+        }
+
+        payment.pay(train.getFare());
+
+        Ticket ticket = new Ticket(passenger, train, coachType);
+        tickets.add(ticket);
+
+        System.out.println("Ticket booked successfully.");
+        ticket.displayTicket();
+    }
+
+    @Override
+    public void bookTicket() {
+        System.out.print("Enter Passenger ID: ");
+        int passengerId = readInt();
+
+        System.out.print("Enter Passenger Name: ");
+        String name = sc.nextLine();
+
+        System.out.print("Enter Age: ");
+        int age = readInt();
+
+        System.out.print("Enter Gender: ");
+        String gender = sc.nextLine();
+
+        Passenger passenger = new Passenger(passengerId, name, age, gender);
+
+        viewTrains();
+
+        System.out.print("Enter Train ID to book: ");
+        int trainId = readInt();
+
+        System.out.print("Enter Coach Type (Sleeper / AC / General): ");
+        String coachType = sc.nextLine();
+
+        bookTicket(trainId, passenger, coachType);
+    }
+
+    @Override
+    public void cancelTicket() {
+        System.out.print("Enter Ticket ID to cancel: ");
+        int ticketId = readInt();
+
+        Ticket ticket = findTicketById(ticketId);
+
+        if (ticket == null) {
+            System.out.println("Ticket not found.");
+            return;
+        }
+
+        if (ticket.getStatus().equals("CANCELLED")) {
+            System.out.println("This ticket is already cancelled.");
+            return;
+        }
+
+        ticket.cancel();
+        ticket.getTrain().cancelSeat();
+
+        System.out.println("Ticket cancelled successfully.");
+        ticket.displayTicket();
+    }
+
+    @Override
+    public void viewAllTickets() {
+        if (tickets.isEmpty()) {
+            System.out.println("No tickets booked yet.");
+            return;
+        }
+
+        System.out.println("\n================ ALL TICKETS ================");
+        for (Ticket ticket : tickets) {
+            ticket.displayTicket();
+        }
+    }
+
+    public void searchTicketByPassengerId() {
+        System.out.print("Enter Passenger ID to search: ");
+        int passengerId = readInt();
+
+        boolean found = false;
+        for (Ticket ticket : tickets) {
+            if (ticket.getPassenger().getPassengerId() == passengerId) {
+                ticket.displayTicket();
+                found = true;
+            }
+        }
+
+        if (!found) {
+            System.out.println("No ticket found for this Passenger ID.");
+        }
+    }
+
+    private int readInt() {
+        while (true) {
+            try {
+                int value = Integer.parseInt(sc.nextLine());
+                return value;
+            } catch (Exception e) {
+                System.out.print("Enter a valid number: ");
+            }
+        }
+    }
+
+    public void start() {
+        int choice;
+
+        do {
+            System.out.println("\n========= RAILWAY RESERVATION SYSTEM =========");
+            System.out.println("1. View Trains");
+            System.out.println("2. Book Ticket");
+            System.out.println("3. Cancel Ticket");
+            System.out.println("4. View All Tickets");
+            System.out.println("5. Search Ticket by Passenger ID");
+            System.out.println("6. Exit");
+            System.out.print("Enter your choice: ");
+
+            choice = readInt();
+
+            switch (choice) {
+                case 1:
+                    viewTrains();
+                    break;
+                case 2:
+                    bookTicket();
+                    break;
+                case 3:
+                    cancelTicket();
+                    break;
+                case 4:
+                    viewAllTickets();
+                    break;
+                case 5:
+                    searchTicketByPassengerId();
+                    break;
+                case 6:
+                    System.out.println("Thank you for using Railway Reservation System.");
+                    break;
+                default:
+                    System.out.println("Invalid choice. Try again.");
+            }
+        } while (choice != 6);
+    }
+}
+
+// -------------------- MAIN --------------------
+public class Main {
+    public static void main(String[] args) {
+        ReservationSystem system = new ReservationSystem();
+        system.start();
+    }
+}
